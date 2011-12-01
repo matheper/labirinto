@@ -17,11 +17,10 @@ def fitness(individuo)
 
   fitness = individuo[:cromossomo].reduce(0) do |fitness, gene|
     if posicao[0] > 9 or posicao[0] < 0 or posicao[1] > 9 or posicao[1] < 0
-      fitness += 50 unless saida
+      fitness += 1000 unless saida
     else
       celula = LABIRINTO[posicao[0]][posicao[1]]
-      shift = 1 << gene
-      fitness += ((celula & shift) * 50) unless saida
+      fitness += ((celula & 1 << gene) * 10) unless saida
     end
 
     direcao = DIRECOES[gene]
@@ -40,16 +39,14 @@ def fitness(individuo)
 end
 
 def crossover(pais)
-  filhos = []
-
   if rand < 0.7
     corte = rand(BITS)
     cromossomos = []
     cromossomos << pais[0][:cromossomo].slice(0, corte).concat(pais[1][:cromossomo].slice(corte, BITS))
     cromossomos << pais[1][:cromossomo].slice(0, corte).concat(pais[0][:cromossomo].slice(corte, BITS))
-    filhos << novo_individuo(cromossomos[0]) << novo_individuo(cromossomos[1])
+    [] << mutacao(novo_individuo(cromossomos[0])) << mutacao(novo_individuo(cromossomos[1]))
   else
-    pais
+    pais.map { |p| mutacao(p) }
   end
 end
 
@@ -59,7 +56,7 @@ end
 
 def mutacao(individuo)
   cromossomo = individuo[:cromossomo].dup.map do |gene|
-    if rand <= 0.017
+    if rand <= 0.3
       rand(4)
     else
       gene
@@ -81,7 +78,7 @@ LABIRINTO = [
   [ 9, 12, 10, 10,  9, 12, 10, 10, 10,  9]]
 
 DIRECOES = [[0, 1], [-1, 0], [0, -1], [1, 0]]
-POPULACAO_INICIAL = 5_000
+POPULACAO_INICIAL = 500
 BITS = 55
 ENTRADA = [9, 0]
 SAIDA = [0, 9]
@@ -90,17 +87,16 @@ individuos = nova_populacao(POPULACAO_INICIAL)
 
 begin
   while true
-    novos_individuos = selecao(individuos, POPULACAO_INICIAL / 2)
-    #novos_individuos = []
+    novos_individuos = selecao(individuos, 10)
     individuos.each_slice(2) do |slice|
       novos_individuos.concat crossover(slice)
     end
-    individuos = selecao(novos_individuos.map { |individuo| mutacao(individuo) }, POPULACAO_INICIAL)
+    individuos = selecao(novos_individuos, POPULACAO_INICIAL).shuffle
 
     puts individuos.reduce(999999) { |menor, individuo|
       individuo[:fitness] < menor ? individuo[:fitness] : menor
     }
   end
 rescue Interrupt
-  puts individuos.reverse
+  puts selecao(individuos, 1).reverse
 end
