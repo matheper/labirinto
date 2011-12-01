@@ -74,17 +74,16 @@ LABIRINTO = [
   [ 4,  2, 10,  8,  2,  1,  5, 12, 10,  3],
   [ 5,  5, 14, 11,  5,  5, 12, 10, 10,  1],
   [ 9, 12, 10, 10,  9, 12, 10, 10, 10,  9]]
-
 DIRECOES = [[0, 1], [-1, 0], [0, -1], [1, 0]]
 POPULACAO_INICIAL = 500
 BITS = 55
 ENTRADA = [9, 0]
 SAIDA = [0, 9]
-
 individuos = nova_populacao(POPULACAO_INICIAL)
+iteracoes = 0
 
 begin
-  while true
+  while iteracoes += 1
     novos_individuos = selecao(individuos, 10)
     individuos.each_slice(2) do |slice|
       novos_individuos.concat crossover(slice)
@@ -96,5 +95,5 @@ begin
     }
   end
 rescue Interrupt
-  puts selecao(individuos, 1).reverse
+  puts selecao(individuos, 1).reverse, iteracoes
 end
