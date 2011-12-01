@@ -21,7 +21,7 @@ def fitness(individuo)
     else
       celula = LABIRINTO[posicao[0]][posicao[1]]
       shift = 1 << gene
-      fitness += ((celula & shift) * 10) unless saida
+      fitness += ((celula & shift) * 50) unless saida
     end
 
     direcao = DIRECOES[gene]
@@ -34,52 +34,42 @@ def fitness(individuo)
     fitness
   end
 
-  fitness += 50 unless saida
+  fitness += 1000 unless saida
 
   fitness
 end
 
-def crossover(pais, cortes)
-  cromossomo = []
-  tamanho = (BITS / cortes.to_f).ceil
-  n = pais.size
+def crossover(pais)
+  filhos = []
 
-  cortes.times do |corte|
-    comeco = tamanho * corte
-    n.times do |i|
-      cromossomo.concat(pais[rand(n)][:cromossomo].slice(comeco, tamanho))
-    end
+  if rand < 0.7
+    corte = rand(BITS)
+    cromossomos = []
+    cromossomos << pais[0][:cromossomo].slice(0, corte).concat(pais[1][:cromossomo].slice(corte, BITS))
+    cromossomos << pais[1][:cromossomo].slice(0, corte).concat(pais[0][:cromossomo].slice(corte, BITS))
+    filhos << novo_individuo(cromossomos[0]) << novo_individuo(cromossomos[1])
+  else
+    pais
   end
-
-  novo_individuo(cromossomo)
 end
 
 def selecao(individuos, populacao)
   individuos.sort { |a, b| a[:fitness] <=> b[:fitness] }[0...populacao]
 end
 
-def selecao_torneio(individuos)
-  elite = []
-  individuos.each_slice(2) do |s|
-    if s.size > 1
-      elite << (s[0][:fitness] < s[1][:fitness] ? s[0] : s[1])
-    else
-      elite << s[0]
-    end
-  end
-  elite
-end
-
 def mutacao(individuo)
-  cromossomo = individuo[:cromossomo].dup
-  rand(BITS_MUTACAO).times do
-    cromossomo[rand(55)] = rand(4)
+  cromossomo = individuo[:cromossomo].dup.map do |gene|
+    if rand <= 0.017
+      rand(4)
+    else
+      gene
+    end
   end
   novo_individuo(cromossomo)
 end
 
 LABIRINTO = [
-  [ 8, 10, 10, 10,  3,  6, 10, 10,  3,  6],
+  [ 6, 10, 10, 10,  3,  6, 10, 10,  3,  6],
   [ 5, 14, 10, 10,  9,  5,  6,  3, 12,  9],
   [ 4, 10, 10, 10, 10,  1, 13,  4, 10,  3],
   [12, 10, 10,  3, 14,  8, 10,  9,  7,  5],
@@ -91,30 +81,26 @@ LABIRINTO = [
   [ 9, 12, 10, 10,  9, 12, 10, 10, 10,  9]]
 
 DIRECOES = [[0, 1], [-1, 0], [0, -1], [1, 0]]
-POPULACAO_INICIAL = 80
+POPULACAO_INICIAL = 5_000
 BITS = 55
 ENTRADA = [9, 0]
 SAIDA = [0, 9]
-CORTES = 11
-PAIS = 3
-FILHOS = 2
-ITERACOES_MUTACAO = 10
-BITS_MUTACAO = 5
 
 individuos = nova_populacao(POPULACAO_INICIAL)
 
-i = 1
-while i = (i + 1 % ITERACOES_MUTACAO)
-  novos_individuos = []
-  individuos.each_slice(PAIS) do |slice|
-    slice = slice.map { |x| i == 0 ? mutacao(x) : x }
-    novos_individuos.concat slice
-    FILHOS.times { novos_individuos << crossover(slice, CORTES) }
-  end
-  individuos = selecao(novos_individuos, POPULACAO_INICIAL)
-  #individuos = selecao_torneio(novos_individuos)
+begin
+  while true
+    novos_individuos = selecao(individuos, POPULACAO_INICIAL / 2)
+    #novos_individuos = []
+    individuos.each_slice(2) do |slice|
+      novos_individuos.concat crossover(slice)
+    end
+    individuos = selecao(novos_individuos.map { |individuo| mutacao(individuo) }, POPULACAO_INICIAL)
 
-  puts individuos.reduce(999999) { |menor, individuo|
-    individuo[:fitness] < menor ? individuo[:fitness] : menor
-  }
+    puts individuos.reduce(999999) { |menor, individuo|
+      individuo[:fitness] < menor ? individuo[:fitness] : menor
+    }
+  end
+rescue Interrupt
+  puts individuos.reverse
 end
