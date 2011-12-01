@@ -39,12 +39,10 @@ def fitness(individuo)
 end
 
 def crossover(pais)
-  if rand < 0.7
+  if rand < 0.6
     corte = rand(BITS)
-    cromossomos = []
-    cromossomos << pais[0][:cromossomo].slice(0, corte).concat(pais[1][:cromossomo].slice(corte, BITS))
-    cromossomos << pais[1][:cromossomo].slice(0, corte).concat(pais[0][:cromossomo].slice(corte, BITS))
-    [] << mutacao(novo_individuo(cromossomos[0])) << mutacao(novo_individuo(cromossomos[1]))
+    filhos = [] << novo_individuo(pais[0][:cromossomo].slice(0, corte).concat(pais[1][:cromossomo].slice(corte, BITS)))
+    filhos << novo_individuo(pais[1][:cromossomo].slice(0, corte).concat(pais[0][:cromossomo].slice(corte, BITS)))
   else
     pais.map { |p| mutacao(p) }
   end
@@ -56,7 +54,7 @@ end
 
 def mutacao(individuo)
   cromossomo = individuo[:cromossomo].dup.map do |gene|
-    if rand <= 0.3
+    if rand <= 0.01
       rand(4)
     else
       gene
