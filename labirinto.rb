@@ -20,7 +20,7 @@ def fitness(individuo)
       fitness += 1000 unless saida
     else
       celula = LABIRINTO[posicao[0]][posicao[1]]
-      fitness += ((celula & 1 << gene) * 10) unless saida
+      fitness += ((celula & 1 << gene) > 0 ? 10 : 0) unless saida
     end
 
     direcao = DIRECOES[gene]
